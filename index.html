@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaSearch</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #a78bfa, #f472b6);
+      color: #111;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: white;
+      margin-bottom: 2rem;
+      text-shadow: 2px 2px #00000033;
+    }
+
+    input[type="text"] {
+      padding: 1rem;
+      width: 80%;
+      max-width: 500px;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1.2rem;
+      box-shadow: 0 0 10px #00000033;
+      outline: none;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border: none;
+      background-color: #7c3aed;
+      color: white;
+      border-radius: 2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px #00000033;
+    }
+
+    button:hover {
+      background-color: #5b21b6;
+    }
+
+    .results {
+      margin-top: 2rem;
+      text-align: left;
+      max-width: 600px;
+      margin-inline: auto;
+      background: white;
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 0 10px #00000033;
+    }
+
+    .result {
+      margin-bottom: 1.5rem;
+    }
+
+    .result h3 {
+      margin: 0;
+      color: #4c1d95;
+    }
+
+    .result p {
+      margin: 0.25rem 0 0;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>NovaSearch</h1>
+  <input type="text" id="searchInput" placeholder="What are you searching for, star explorer?" />
+  <br />
+  <button onclick="showResults()">NovaSearch</button>
+
+  <div class="results" id="resultsBox" style="display: none;"></div>
+
+  <script>
+    function showResults() {
+      const query = document.getElementById('searchInput').value.trim();
+      const box = document.getElementById('resultsBox');
+      box.innerHTML = '';
+      
+      if (!query) return;
+
+      // Just some fun fake results
+      const fakeResults = [
+        {
+          title: `Results for "${query}"`,
+          desc: `We found stellar info about "${query}" on Planet Spark.`
+        },
+        {
+          title: `NovaTips: Top facts about ${query}`,
+          desc: `Explore fun, made-up facts about "${query}" with Nova!`
+        },
+        {
+          title: `Nova Encyclopedia Entry`,
+          desc: `Learn everything fake-but-fun about "${query}" from our intergalactic database.`
+        }
+      ];
+
+      fakeResults.forEach(res => {
+        const div = document.createElement('div');
+        div.className = 'result';
+        div.innerHTML = `<h3>${res.title}</h3><p>${res.desc}</p>`;
+        box.appendChild(div);
+      });
+
+      box.style.display = 'block';
+    }
+
+    // PWA support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
