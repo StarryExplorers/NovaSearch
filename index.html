@@ -2,130 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NovaSearch</title>
   <link rel="manifest" href="manifest.json" />
   <style>
     :root {
-      --bg-color: #0a0a23;
-      --text-color: #ffffff;
+      --bg: #0a0a23; --fg: #fff;
     }
-
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      overflow: hidden;
-      transition: background 0.4s, color 0.4s;
+      background: var(--bg); color: var(--fg);
+      display: flex; flex-direction: column;
+      align-items: center; min-height: 100vh; overflow: hidden;
+      transition: background .4s, color .4s;
     }
-
-    header {
-      text-align: center;
-      padding: 20px;
-      z-index: 2;
+    header { text-align: center; padding: 20px; z-index:2; }
+    header img { height: 60px; border-radius:50%; margin-bottom:10px; }
+    h1 { font-size: 2.5rem; margin:0; }
+    .controls, .search-only { display:flex; gap:8px; flex-wrap: wrap; justify-content:center; z-index:2; }
+    .controls > *, .search-only > * {
+      padding: 10px; border:none; border-radius:8px;
+      font-size:1rem; background: rgba(255,255,255,0.2); color: var(--fg)
     }
-
-    header img {
-      height: 60px;
-      border-radius: 50%;
-      margin-bottom: 10px;
+    .result { max-width:700px; margin:20px; padding:20px;
+      background: rgba(255,255,255,0.1); border-radius:12px; text-align:left; z-index:2;
     }
+    .result a { color: var(--fg); text-decoration: none; font-weight:bold; }
+    .hidden { display:none; }
+    .floating { position:absolute; pointer-events:none; animation: float 10s linear infinite; opacity:.7; font-size:20px; }
+    @keyframes float { 0%{transform:translateY(100vh)}100%{transform:translateY(-10vh);} }
 
-    h1 {
-      font-size: 2.5rem;
-      margin: 0;
-    }
-
-    .search-box {
-      margin: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 2;
-    }
-
-    input[type="text"], select, button {
-      padding: 10px;
-      width: 80vw;
-      max-width: 400px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      margin: 5px;
-    }
-
-    button {
-      background-color: #ffffff22;
-      color: var(--text-color);
-      cursor: pointer;
-    }
-
-    button:hover, select:hover {
-      background-color: #ffffff44;
-    }
-
-    .hidden { display: none; }
-
-    .result {
-      max-width: 700px;
-      padding: 20px;
-      text-align: left;
-      z-index: 2;
-      background-color: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      margin: 20px;
-    }
-
-    .result img {
-      max-width: 100%;
-      margin-top: 10px;
-      border-radius: 12px;
-    }
-
-    .theme-light { --bg-color: #ffffff; --text-color: #000000; }
-    .theme-ocean { --bg-color: #0f2027; --text-color: #a3d5ff; }
-    .theme-sunset { --bg-color: #2c3e50; --text-color: #f39c12; }
-    .theme-mint { --bg-color: #d0f0c0; --text-color: #004d00; }
-    .theme-night { --bg-color: #1a1a2e; --text-color: #eaeaea; }
-    .theme-ice { --bg-color: #e0f7fa; --text-color: #004d40; }
-
-    .floating {
-      position: absolute;
-      pointer-events: none;
-      animation: float 10s linear infinite;
-      opacity: 0.7;
-      font-size: 20px;
-    }
-
-    @keyframes float {
-      0% { transform: translateY(100vh) scale(1); }
-      100% { transform: translateY(-10vh) scale(1.2); }
-    }
+    /* Improved Themes */
+    body.theme-light { --bg: #f5f5f5; --fg: #222; }
+    body.theme-ocean { --bg: #022c43; --fg: #a0c4ff; }
+    body.theme-sunset { --bg: #ff4500; --fg: #fffbe6; }
+    body.theme-mint { --bg: #e0f2f1; --fg: #004d40; }
+    body.theme-night { --bg: #0d1b2a; --fg: #e0e1dd; }
+    body.theme-ice { --bg: #e0f7fa; --fg: #006064; }
   </style>
 </head>
 <body>
   <header>
-    <img src="icon-192.png" alt="NovaSearch Logo" />
+    <img src="icon-192.png" alt="NovaSearch Logo">
     <h1>NovaSearch</h1>
   </header>
 
-  <div class="search-box" id="searchBox">
-    <input type="text" id="query" placeholder="Search anything..." />
-    <select id="category">
-      <option value="web">Web</option>
-      <option value="images">Images</option>
-      <option value="news">News</option>
-    </select>
-    <button onclick="search()">Search</button>
-    <button onclick="toggleVoice()">🎤 Voice Search</button>
-    <select id="themeSwitcher">
-      <option value="">Choose Theme</option>
+  <div class="controls" id="controls">
+    <input type="text" id="query" placeholder="Search...">
+    <button onclick="doSearch()">Search</button>
+    <button onclick="toggleVoice()">🎤</button>
+    <select id="themeSwitch" onchange="applyTheme(this.value)">
+      <option value="">Theme</option>
       <option value="theme-light">Light</option>
       <option value="theme-ocean">Ocean</option>
       <option value="theme-sunset">Sunset</option>
@@ -133,8 +61,8 @@
       <option value="theme-night">Night</option>
       <option value="theme-ice">Ice</option>
     </select>
-    <select id="effectSwitcher">
-      <option value="">Choose Effect</option>
+    <select id="effectSwitch" onchange="applyEffect(this.value)">
+      <option value="">Effect</option>
       <option value="stars">Stars</option>
       <option value="hearts">Hearts</option>
       <option value="sparks">Sparks</option>
@@ -144,108 +72,89 @@
     </select>
   </div>
 
-  <div class="search-box hidden" id="searchOnlyBox">
-    <input type="text" id="queryActive" placeholder="Search anything..." />
-    <button onclick="search()">Search</button>
+  <div class="search-only hidden" id="searchOnly">
+    <input type="text" id="querySolo" placeholder="Search...">
+    <button onclick="doSearch()">Search</button>
     <button onclick="cancelSearch()">Cancel</button>
   </div>
 
-  <div id="loading" style="display:none">Loading...</div>
-  <div class="result" id="resultBox"></div>
-  <div id="historyBox"></div>
-  <div id="effect-container"></div>
+  <div id="loading" class="hidden">Loading...</div>
+  <div id="results"></div>
+  <div id="effects"></div>
 
   <script>
-    function search() {
-      const queryInput = document.getElementById("query");
-      const queryActiveInput = document.getElementById("queryActive");
-      const query = queryInput?.value || queryActiveInput?.value;
+    async function doSearch() {
+      const q = encodeURIComponent((document.getElementById('controls').classList.contains('hidden') ? document.getElementById('querySolo') : document.getElementById('query')).value.trim());
+      if (!q) return;
 
-      const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&pretty=1`;
-      document.getElementById("loading").style.display = "block";
+      document.getElementById('controls').classList.add('hidden');
+      document.getElementById('searchOnly').classList.remove('hidden');
+      toggleLoading(true);
 
-      // Hide full UI, show minimal search UI
-      document.getElementById("searchBox").classList.add("hidden");
-      document.getElementById("searchOnlyBox").classList.remove("hidden");
-
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          const box = document.getElementById("resultBox");
-          box.innerHTML = "";
-          if (data.Heading) box.innerHTML += `<h2>${data.Heading}</h2>`;
-          if (data.Abstract) box.innerHTML += `<p>${data.Abstract}</p>`;
-          if (data.Image) box.innerHTML += `<img src="${data.Image}" alt="Result Image" />`;
-          if (!data.Heading && !data.Abstract) box.innerHTML += `<p>No results found. Try something else!</p>`;
-          saveHistory(query);
-          showHistory();
-          document.getElementById("loading").style.display = "none";
-        })
-        .catch(() => {
-          document.getElementById("resultBox").innerHTML = "<p>Error fetching results. Try again later.</p>";
-          document.getElementById("loading").style.display = "none";
+      try {
+        const res = await fetch('https://api.search1api.com/search', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({query: q, search_service: 'google', max_results: 10})
         });
+        const data = await res.json();
+        showResults(data.results);
+      } catch {
+        document.getElementById('results').innerHTML = '<p>Error loading results.</p>';
+      }
+      toggleLoading(false);
     }
 
     function cancelSearch() {
-      document.getElementById("searchOnlyBox").classList.add("hidden");
-      document.getElementById("searchBox").classList.remove("hidden");
-      document.getElementById("resultBox").innerHTML = "";
+      document.getElementById('searchOnly').classList.add('hidden');
+      document.getElementById('controls').classList.remove('hidden');
+      document.getElementById('results').innerHTML = '';
+      removeEffects();
     }
 
-    function saveHistory(query) {
-      let history = JSON.parse(localStorage.getItem("novaHistory")) || [];
-      history.unshift(query);
-      history = history.slice(0, 5);
-      localStorage.setItem("novaHistory", JSON.stringify(history));
+    function showResults(items) {
+      const box = document.getElementById('results');
+      box.innerHTML = items.map(item =>
+        `<div class="result">
+           <h2><a href="${item.link}" target="_blank">${item.title}</a></h2>
+           <p>${item.snippet}</p>
+         </div>`
+      ).join('');
     }
 
-    function showHistory() {
-      const box = document.getElementById("historyBox");
-      const history = JSON.parse(localStorage.getItem("novaHistory")) || [];
-      box.innerHTML = `<h3>Recent Searches</h3><ul>${history.map(q => `<li>${q}</li>`).join("")}</ul>`;
+    function toggleLoading(show) {
+      document.getElementById('loading').classList.toggle('hidden', !show);
     }
 
-    document.getElementById("themeSwitcher").addEventListener("change", () => {
-      document.body.className = document.getElementById("themeSwitcher").value;
-    });
+    function applyTheme(c) {
+      document.body.className = c;
+      cancelEffects();
+    }
 
-    document.getElementById("effectSwitcher").addEventListener("change", () => {
-      const effect = document.getElementById("effectSwitcher").value;
-      const container = document.getElementById("effect-container");
-      container.innerHTML = "";
-
-      const emojis = {
-        stars: "✨",
-        hearts: "❤️",
-        sparks: "🔥",
-        leaves: "🌿",
-        pixels: "■",
-        snow: "❄️"
-      };
-
-      if (emojis[effect]) {
-        for (let i = 0; i < 30; i++) {
-          const span = document.createElement("span");
-          span.className = "floating";
-          span.textContent = emojis[effect];
-          span.style.left = Math.random() * 100 + "vw";
-          span.style.top = Math.random() * 100 + "vh";
-          span.style.animationDelay = Math.random() * 10 + "s";
-          container.appendChild(span);
-        }
+    function applyEffect(e) {
+      const emoji = {'stars':'✨','hearts':'❤️','sparks':'🔥','leaves':'🍃','pixels':'▪️','snow':'❄️'}[e];
+      const container = document.getElementById('effects');
+      container.innerHTML = '';
+      if (!emoji) return;
+      for (let i=0; i<30; i++){
+        const el = document.createElement('div');
+        el.className = 'floating';
+        el.textContent = emoji;
+        el.style.left = Math.random()*100 + 'vw';
+        el.style.top = Math.random()*100 + 'vh';
+        el.style.animationDelay = Math.random()*10 + 's';
+        container.appendChild(el);
       }
-    });
-
-    function toggleVoice() {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.onresult = function(event) {
-        document.getElementById("query").value = event.results[0][0].transcript;
-      };
-      recognition.start();
     }
+    function cancelEffects() { document.getElementById('effects').innerHTML = ''; }
 
-    window.onload = showHistory;
+    function toggleVoice(){
+      const rec = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+      rec.onresult = e=> {
+        (document.getElementById('controls').classList.contains('hidden') ? document.getElementById('querySolo') : document.getElementById('query')).value = e.results[0][0].transcript;
+      };
+      rec.start();
+    }
   </script>
 </body>
 </html>
