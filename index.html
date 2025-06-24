@@ -5,123 +5,235 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NovaSearch</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
   <style>
+    :root {
+      --bg-color: #0a0a23;
+      --text-color: #ffffff;
+      --accent-color: #1a1a40;
+    }
+
     body {
       margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #a78bfa, #f472b6);
-      color: #111;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    header {
       text-align: center;
-      padding: 2rem;
+      padding: 20px;
+      z-index: 2;
+    }
+
+    header img {
+      height: 60px;
+      border-radius: 50%;
+      margin-bottom: 10px;
     }
 
     h1 {
-      font-size: 3rem;
-      color: white;
-      margin-bottom: 2rem;
-      text-shadow: 2px 2px #00000033;
+      font-size: 2.5rem;
+      margin: 0;
+    }
+
+    .search-box {
+      margin: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
     }
 
     input[type="text"] {
-      padding: 1rem;
-      width: 80%;
-      max-width: 500px;
-      border: none;
-      border-radius: 2rem;
-      font-size: 1.2rem;
-      box-shadow: 0 0 10px #00000033;
-      outline: none;
-    }
-
-    button {
-      margin-top: 1rem;
-      padding: 0.75rem 2rem;
+      padding: 10px;
+      width: 80vw;
+      max-width: 400px;
       font-size: 1rem;
+      border-radius: 8px;
       border: none;
-      background-color: #7c3aed;
+      margin-bottom: 10px;
+    }
+
+    select, button {
+      padding: 10px 20px;
+      background-color: #ffffff22;
       color: white;
-      border-radius: 2rem;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 4px 10px #00000033;
+      font-size: 1rem;
+      margin: 5px;
     }
 
-    button:hover {
-      background-color: #5b21b6;
-    }
-
-    .results {
-      margin-top: 2rem;
-      text-align: left;
-      max-width: 600px;
-      margin-inline: auto;
-      background: white;
-      border-radius: 1rem;
-      padding: 1rem;
-      box-shadow: 0 0 10px #00000033;
+    button:hover, select:hover {
+      background-color: #ffffff44;
     }
 
     .result {
-      margin-bottom: 1.5rem;
+      max-width: 700px;
+      padding: 20px;
+      text-align: left;
+      z-index: 2;
     }
 
-    .result h3 {
-      margin: 0;
-      color: #4c1d95;
+    .result img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 12px;
     }
 
-    .result p {
-      margin: 0.25rem 0 0;
-      font-size: 0.95rem;
+    .theme-light { --bg-color: #ffffff; --text-color: #000000; }
+    .theme-ocean { --bg-color: #003f5c; --text-color: #fbfbfb; }
+    .theme-sunset { --bg-color: #ff6f61; --text-color: #1c1c1c; }
+    .theme-mint { --bg-color: #98ff98; --text-color: #002200; }
+    .theme-night { --bg-color: #1c1c1c; --text-color: #f5f5f5; }
+    .theme-ice { --bg-color: #e0f7fa; --text-color: #004d40; }
+
+    .floating { position: absolute; pointer-events: none; animation: float 10s linear infinite; opacity: 0.7; }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) scale(1); }
+      100% { transform: translateY(-10vh) scale(1.2); }
     }
   </style>
 </head>
 <body>
-  <h1>NovaSearch</h1>
-  <input type="text" id="searchInput" placeholder="What are you searching for, star explorer?" />
-  <br />
-  <button onclick="showResults()">NovaSearch</button>
+  <header>
+    <img src="icon-192.png" alt="NovaSearch Logo" />
+    <h1>NovaSearch</h1>
+  </header>
 
-  <div class="results" id="resultsBox" style="display: none;"></div>
+  <div class="search-box">
+    <input type="text" id="query" placeholder="Search anything..." />
+    <select id="category">
+      <option value="web">Web</option>
+      <option value="images">Images</option>
+      <option value="news">News</option>
+    </select>
+    <button onclick="search()">Search</button>
+    <button onclick="toggleVoice()">🎤 Voice Search</button>
+    <select id="themeSwitcher" onchange="switchTheme()">
+      <option value="">Choose Theme</option>
+      <option value="theme-light">Light</option>
+      <option value="theme-ocean">Ocean</option>
+      <option value="theme-sunset">Sunset</option>
+      <option value="theme-mint">Mint</option>
+      <option value="theme-night">Night</option>
+      <option value="theme-ice">Ice</option>
+    </select>
+    <select id="effectSwitcher" onchange="setEffect()">
+      <option value="">Choose Effect</option>
+      <option value="stars">Stars</option>
+      <option value="hearts">Hearts</option>
+      <option value="sparks">Sparks</option>
+      <option value="leaves">Leaves</option>
+      <option value="pixels">Pixels</option>
+      <option value="snow">Snow</option>
+    </select>
+  </div>
+
+  <div id="loading" style="display:none">Loading...</div>
+  <div class="result" id="resultBox"></div>
+  <div id="historyBox"></div>
+  <div id="effect-container"></div>
 
   <script>
-    function showResults() {
-      const query = document.getElementById('searchInput').value.trim();
-      const box = document.getElementById('resultsBox');
-      box.innerHTML = '';
-      
-      if (!query) return;
+    function search() {
+      const query = document.getElementById("query").value;
+      const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`;
 
-      // Just some fun fake results
-      const fakeResults = [
-        {
-          title: `Results for "${query}"`,
-          desc: `We found stellar info about "${query}" on Planet Spark.`
-        },
-        {
-          title: `NovaTips: Top facts about ${query}`,
-          desc: `Explore fun, made-up facts about "${query}" with Nova!`
-        },
-        {
-          title: `Nova Encyclopedia Entry`,
-          desc: `Learn everything fake-but-fun about "${query}" from our intergalactic database.`
+      document.getElementById("loading").style.display = "block";
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const box = document.getElementById("resultBox");
+          box.innerHTML = "";
+
+          if (data.Heading) {
+            box.innerHTML += `<h2>${data.Heading}</h2>`;
+          }
+
+          if (data.Abstract) {
+            box.innerHTML += `<p>${data.Abstract}</p>`;
+          } else {
+            box.innerHTML += `<p>No summary found. Try something else!</p>`;
+          }
+
+          if (data.Image) {
+            box.innerHTML += `<img src="${data.Image}" alt="Result Image" />`;
+          }
+
+          saveHistory(query);
+          showHistory();
+          document.getElementById("loading").style.display = "none";
+        })
+        .catch(err => {
+          document.getElementById("resultBox").innerHTML =
+            "<p>Error fetching data. Try again later.</p>";
+          document.getElementById("loading").style.display = "none";
+        });
+    }
+
+    function saveHistory(query) {
+      let history = JSON.parse(localStorage.getItem("novaHistory")) || [];
+      history.unshift(query);
+      history = history.slice(0, 5);
+      localStorage.setItem("novaHistory", JSON.stringify(history));
+    }
+
+    function showHistory() {
+      const box = document.getElementById("historyBox");
+      const history = JSON.parse(localStorage.getItem("novaHistory")) || [];
+      box.innerHTML = `<h3>Recent Searches</h3><ul>${history.map(q => `<li>${q}</li>`).join("")}</ul>`;
+    }
+
+    function switchTheme() {
+      document.body.className = document.getElementById("themeSwitcher").value;
+    }
+
+    function toggleVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.onresult = function(event) {
+        document.getElementById("query").value = event.results[0][0].transcript;
+      };
+      recognition.start();
+    }
+
+    function setEffect() {
+      const effect = document.getElementById("effectSwitcher").value;
+      const container = document.getElementById("effect-container");
+      container.innerHTML = "";
+
+      const emojis = {
+        stars: "✨",
+        hearts: "❤️",
+        sparks: "🔥",
+        leaves: "🌿",
+        pixels: "■",
+        snow: "❄️"
+      };
+
+      if (emojis[effect]) {
+        for (let i = 0; i < 30; i++) {
+          const span = document.createElement("span");
+          span.className = "floating";
+          span.textContent = emojis[effect];
+          span.style.left = Math.random() * 100 + "vw";
+          span.style.animationDelay = Math.random() * 10 + "s";
+          container.appendChild(span);
         }
-      ];
-
-      fakeResults.forEach(res => {
-        const div = document.createElement('div');
-        div.className = 'result';
-        div.innerHTML = `<h3>${res.title}</h3><p>${res.desc}</p>`;
-        box.appendChild(div);
-      });
-
-      box.style.display = 'block';
+      }
     }
 
-    // PWA support
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
+    window.onload = showHistory;
   </script>
 </body>
 </html>
