@@ -9,13 +9,16 @@
     :root {
       --bg: #0a0a23; --fg: #fff;
     }
-    body {
+    html, body {
       margin: 0; padding: 0;
       font-family: 'Segoe UI', sans-serif;
       background: var(--bg); color: var(--fg);
       display: flex; flex-direction: column;
-      align-items: center; min-height: 100vh; overflow: hidden;
+      align-items: center; min-height: 100vh;
       transition: background .4s, color .4s;
+    }
+    body {
+      overflow-y: scroll;
     }
     header { text-align: center; padding: 20px; z-index:2; }
     header img { height: 60px; border-radius:50%; margin-bottom:10px; }
@@ -30,16 +33,23 @@
     }
     .result a { color: var(--fg); text-decoration: none; font-weight:bold; }
     .hidden { display:none; }
-    .floating { position:absolute; pointer-events:none; animation: float 10s linear infinite; opacity:.7; font-size:20px; }
+    .floating { position:absolute; pointer-events:none; animation: float 10s linear infinite; opacity:.7; font-size:var(--emoji-size, 20px); }
     @keyframes float { 0%{transform:translateY(100vh)}100%{transform:translateY(-10vh);} }
 
-    /* Improved Themes */
     body.theme-light { --bg: #f5f5f5; --fg: #222; }
     body.theme-ocean { --bg: #022c43; --fg: #a0c4ff; }
     body.theme-sunset { --bg: #ff4500; --fg: #fffbe6; }
     body.theme-mint { --bg: #e0f2f1; --fg: #004d40; }
     body.theme-night { --bg: #0d1b2a; --fg: #e0e1dd; }
     body.theme-ice { --bg: #e0f7fa; --fg: #006064; }
+    body.theme-forest { --bg: #1b5e20; --fg: #c8e6c9; }
+    body.theme-candy { --bg: #ffb6c1; --fg: #4b0082; }
+    body.theme-space { --bg: #0b0c10; --fg: #66fcf1; }
+    body.theme-tech { --bg: #212121; --fg: #00e676; }
+    body.theme-cyber { --bg: #0f0f0f; --fg: #00ffff; }
+    body.theme-coffee { --bg: #4b3621; --fg: #fceabb; }
+    body.theme-neon { --bg: #000; --fg: #39ff14; }
+    body.theme-sky { --bg: #87ceeb; --fg: #003366; }
   </style>
 </head>
 <body>
@@ -49,7 +59,8 @@
   </header>
 
   <div class="controls" id="controls">
-    <input type="text" id="query" placeholder="Search...">
+    <input type="text" id="query" placeholder="Search..." oninput="showSuggestions(this.value)">
+    <datalist id="suggestions"></datalist>
     <button onclick="doSearch()">Search</button>
     <button onclick="toggleVoice()">🎤</button>
     <select id="themeSwitch" onchange="applyTheme(this.value)">
@@ -60,6 +71,14 @@
       <option value="theme-mint">Mint</option>
       <option value="theme-night">Night</option>
       <option value="theme-ice">Ice</option>
+      <option value="theme-forest">Forest</option>
+      <option value="theme-candy">Candy</option>
+      <option value="theme-space">Space</option>
+      <option value="theme-tech">Tech</option>
+      <option value="theme-cyber">Cyber</option>
+      <option value="theme-coffee">Coffee</option>
+      <option value="theme-neon">Neon</option>
+      <option value="theme-sky">Sky</option>
     </select>
     <select id="effectSwitch" onchange="applyEffect(this.value)">
       <option value="">Effect</option>
@@ -69,6 +88,20 @@
       <option value="leaves">Leaves</option>
       <option value="pixels">Pixels</option>
       <option value="snow">Snow</option>
+      <option value="butterflies">🦋 Butterflies</option>
+      <option value="bubbles">🫧 Bubbles</option>
+      <option value="fireflies">💡 Fireflies</option>
+      <option value="balloons">🎈 Balloons</option>
+      <option value="comets">☄️ Comets</option>
+      <option value="flowers">🌸 Flowers</option>
+      <option value="diamonds">💎 Diamonds</option>
+      <option value="stars2">🌟 Glimmer</option>
+    </select>
+    <select id="emojiSize" onchange="changeEmojiSize(this.value)">
+      <option value="20">Emoji Size</option>
+      <option value="16">Small</option>
+      <option value="24">Medium</option>
+      <option value="36">Large</option>
     </select>
   </div>
 
@@ -83,9 +116,67 @@
   <div id="effects"></div>
 
   <script>
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      setTimeout(() => {
+        if (confirm("Install NovaSearch to your home screen?")) {
+          deferredPrompt.prompt();
+        }
+      }, 2000);
+    });
+
+    function changeEmojiSize(val) {
+      document.documentElement.style.setProperty('--emoji-size', val + 'px');
+    }
+
+    function applyTheme(c) {
+      document.body.className = c;
+      removeEffects();
+    }
+
+    function applyEffect(e) {
+      const emoji = {
+        'stars':'✨','hearts':'❤️','sparks':'🔥','leaves':'🍃',
+        'pixels':'▪️','snow':'❄️','butterflies':'🦋','bubbles':'🫧',
+        'fireflies':'💡','balloons':'🎈','comets':'☄️','flowers':'🌸',
+        'diamonds':'💎','stars2':'🌟'
+      }[e];
+      const container = document.getElementById('effects');
+      container.innerHTML = '';
+      if (!emoji) return;
+      for (let i=0; i<30; i++){
+        const el = document.createElement('div');
+        el.className = 'floating';
+        el.textContent = emoji;
+        el.style.left = Math.random()*100 + 'vw';
+        el.style.top = Math.random()*100 + 'vh';
+        el.style.animationDelay = Math.random()*10 + 's';
+        container.appendChild(el);
+      }
+    }
+
+    function showSuggestions(val) {
+      if (!val) return;
+      const easterEggs = ["sparkify","novablast","zigzagzoom","ultrastorm","megaflux","galaxypop","coderwave","boombyte","aiblast","hypernova"];
+      if (easterEggs.includes(val.toLowerCase())) alert("🎉 You discovered an Easter Egg: " + val);
+      document.getElementById('suggestions').innerHTML = JSON.parse(localStorage.getItem('recentSearches')||"[]")
+        .filter(s => s.toLowerCase().includes(val.toLowerCase()))
+        .map(s => `<option value="${s}">`).join('');
+    }
+
     async function doSearch() {
-      const q = encodeURIComponent((document.getElementById('controls').classList.contains('hidden') ? document.getElementById('querySolo') : document.getElementById('query')).value.trim());
+      const inputId = document.getElementById('controls').classList.contains('hidden') ? 'querySolo' : 'query';
+      const q = encodeURIComponent(document.getElementById(inputId).value.trim());
       if (!q) return;
+
+      let recent = JSON.parse(localStorage.getItem('recentSearches')||"[]");
+      if (!recent.includes(q)) {
+        recent.unshift(q);
+        if (recent.length > 5) recent.pop();
+        localStorage.setItem('recentSearches', JSON.stringify(recent));
+      }
 
       document.getElementById('controls').classList.add('hidden');
       document.getElementById('searchOnly').classList.remove('hidden');
@@ -95,7 +186,7 @@
         const res = await fetch('https://api.search1api.com/search', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({query: q, search_service: 'google', max_results: 10})
+          body: JSON.stringify({query: decodeURIComponent(q), search_service: 'google', max_results: 10})
         });
         const data = await res.json();
         showResults(data.results);
@@ -126,27 +217,7 @@
       document.getElementById('loading').classList.toggle('hidden', !show);
     }
 
-    function applyTheme(c) {
-      document.body.className = c;
-      cancelEffects();
-    }
-
-    function applyEffect(e) {
-      const emoji = {'stars':'✨','hearts':'❤️','sparks':'🔥','leaves':'🍃','pixels':'▪️','snow':'❄️'}[e];
-      const container = document.getElementById('effects');
-      container.innerHTML = '';
-      if (!emoji) return;
-      for (let i=0; i<30; i++){
-        const el = document.createElement('div');
-        el.className = 'floating';
-        el.textContent = emoji;
-        el.style.left = Math.random()*100 + 'vw';
-        el.style.top = Math.random()*100 + 'vh';
-        el.style.animationDelay = Math.random()*10 + 's';
-        container.appendChild(el);
-      }
-    }
-    function cancelEffects() { document.getElementById('effects').innerHTML = ''; }
+    function removeEffects() { document.getElementById('effects').innerHTML = ''; }
 
     function toggleVoice(){
       const rec = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
